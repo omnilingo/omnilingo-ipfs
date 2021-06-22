@@ -1,1 +1,3 @@
+commonvoice-utils
 ipfshttpclient
+mutagen
