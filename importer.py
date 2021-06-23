@@ -75,7 +75,8 @@ class Importer:
 				clip_index[sent_hash].append(clip_res['Hash'])
 				bar.update(i)
 				
-
+		with open(output_path, 'w') as output_file:
+			json.dump(clip_index, output_file)
 
 	def close(self):
 		self._client.close()
