@@ -24,7 +24,8 @@ class Importer:
 
 	def line_count(self, input_path):
 		"""
-			input_path: path to count the number of lines in
+		Efficiently count the number of lines in a file
+		input_path: path to count the number of lines in
 		"""
 		f = open(input_path, 'rb')
 		bufgen = takewhile(lambda x: x, (f.raw.read(1024*1024) for _ in repeat(None)))
@@ -34,17 +35,17 @@ class Importer:
 
 	def path_join(self, *args, sep='/'):
 		"""
-			Join a sequence of arguments on a given delimiter
-			*args: any number of strings
-			sep: directory separator
+		Join a sequence of arguments on a given delimiter
+		*args: any number of strings
+		sep: directory separator
 		"""
 		return sep.join(args)
 
 	def index(self, input_path, output_path):
 		"""
-			Import a Common Voice dump into IPFS
-			input_path: path to a Common Voice dump directory
-			output_path: place to put the generated index in JSON
+		Import a Common Voice dump into IPFS
+		input_path: path to a Common Voice dump directory
+		output_path: place to put the generated index in JSON
 		"""
 
 		clip_index = {}
