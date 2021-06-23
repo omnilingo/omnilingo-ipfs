@@ -41,7 +41,7 @@ class Importer:
 		"""
 		return sep.join(args)
 
-	def index(self, input_path, output_path):
+	def index(self, input_path, output_path, dryrun=False):
 		"""
 		Import a Common Voice dump into IPFS
 		input_path: path to a Common Voice dump directory
@@ -59,6 +59,9 @@ class Importer:
 		file_length = self.line_count(validated_path)
 
 		with open(validated_path, newline='') as validated_file:
+			opts = {}
+			if dryrun: 
+				opts={'only_hash': True}
 			reader = csv.DictReader(validated_file, delimiter='\t')
 			bar = progressbar.ProgressBar(max_value=file_length).start()
 			for (i, row) in enumerate(reader):
@@ -67,7 +70,7 @@ class Importer:
 					'language': row["locale"],
 					'copyright': "CC0-1.0"
 				}
-				sent_hash = self._client.add_str(sentence, opts={'only_hash':True})
+				sent_hash = self._client.add_json(sentence, opts=opts)
 				clip_path = self.path_join(clips_path, row['path'])
 				audio = EasyID3(clip_path)
 				audio["copyright"] = "CC0-1.0"
@@ -75,7 +78,7 @@ class Importer:
 				audio["album"] = sent_hash
 				audio["author"] = row["client_id"]
 				audio.save()
-				clip_res = self._client.add(clip_path, only_hash=True)
+				clip_res = self._client.add(clip_path, opts=opts)
 
 				if sent_hash not in clip_index:
 					clip_index[sent_hash] = []
@@ -92,5 +95,7 @@ class Importer:
 
 if __name__ == "__main__":
 	imp = Importer()
-	imp.index(sys.argv[1], sys.argv[2])
+	dataset_dir = sys.argv[1]
+	index_path = sys.argv[2]
+	imp.index(dataset_dir, index_path, dryrun=False)
 	imp.close()
