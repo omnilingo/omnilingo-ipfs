@@ -41,7 +41,7 @@ class Importer:
 		"""
 		return sep.join(args)
 
-	def index(self, input_path, output_path, dryrun=False):
+	def hashify(self, input_path, output_path, dryrun=False):
 		"""
 		Import a Common Voice dump into IPFS
 		input_path: path to a Common Voice dump directory
@@ -97,5 +97,5 @@ if __name__ == "__main__":
 	imp = Importer()
 	dataset_dir = sys.argv[1]
 	index_path = sys.argv[2]
-	imp.index(dataset_dir, index_path, dryrun=False)
+	imp.hashify(dataset_dir, index_path, dryrun=False)
 	imp.close()
