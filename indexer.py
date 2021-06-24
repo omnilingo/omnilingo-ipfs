@@ -10,6 +10,9 @@ import sys
 
 from mutagen.mp3 import MP3
 
+from cvutils.tokeniser import Tokeniser
+from cvutils.tagger import Tagger
+
 TRANSCRIPT_BLACKLIST = ["Hey", "Hei", "Firefox"]
 MAX_TEXT_LENGTH = 100  # in characters
 MAX_AUDIO_LENGTH = 10  # in seconds
@@ -17,12 +20,14 @@ MAX_PER_BUCKET = 1000  # in clips
 
 class Indexer:
 	
-	def __init__(self):
+	def __init__(self, locale):
 		"""Set up a connection to the local IPFS node"""
 		try:
 			self._client = ipfshttpclient.connect(session=True)
 		except:
 			print('Could not connect to IPFS node')
+
+		self.locale = locale
 
 	def rebucket(self, b):
 		""" """
@@ -33,10 +38,13 @@ class Indexer:
 			return m[b]
 		return 10
 			
-	def index(self, index_path, output_path):
+	def index(self, index_path):
 		""" """
 		with open(index_path, 'r') as index_file:
 			clip_index = json.load(index_file)
+
+		tokeniser = Tokeniser(self.locale)
+		tagger = Tagger(self.locale)
 
 		skipped = 0
 		total = 0
@@ -56,6 +64,15 @@ class Indexer:
 				skipped += 1
 				continue
 
+			tokens = tokeniser.tokenise(sent_res["content"])
+			tags = tagger.tag(tokens)
+			meta = {
+				'sentence_cid': sent_cid,
+				'tokens': tokens,
+				'tags': tags
+			}
+			meta_cid = self._client.add_json(meta)
+
 			for clip_cid in clip_index[sent_cid]:
 				clip_fd = io.BytesIO(self._client.cat(clip_cid))
 				audio = MP3(clip_fd)
@@ -71,32 +88,37 @@ class Indexer:
 					'length': audio.info.length,
 					'chars_sec': chars_sec,
 					'sentence_cid': sent_cid,
-					'clip_cid': clip_cid
+					'meta_cid': meta_cid,
+					'clip_cid': clip_cid,
 				}
 				buckets[bucket].append(entry)
 				total += 1
 				bar.update(total)
 
 		print()
+		index_list = []
 		for bucket in buckets:
+			index_list += buckets[bucket]
 			n_clips = len(buckets[bucket])
 			print(
-				"bucket " + str(bucket).zfill(2) + " -> " + str(n_clips).rjust(5),
+				" bucket " + str(bucket).zfill(2) + " -> " + str(n_clips).rjust(5),
 				"." * (n_clips // 10),
 				file=sys.stderr,
 			)
 
-		with open(output_path, 'w') as output_file:
-			json.dump(buckets, output_file)
-		
+		opts = {'only_hash': False}
+		index_hash = self._client.add_json(index_list, opts=opts)
+
+		return index_hash
 			
 	def close(self):
 		"""Close the TCP connection to IPFS"""
 		self._client.close()
 
 if __name__ == "__main__":
-	ind = Indexer()
-	index_path = sys.argv[1]
-	output_path = sys.argv[2]
-	ind.index(index_path, output_path)
+	ind = Indexer(sys.argv[1])
+	index_path = sys.argv[2]
+	#output_path = sys.argv[2]
+	index = ind.index(index_path)
+	print("Index: {index}".format(index = index))
 	ind.close()
