@@ -116,6 +116,9 @@ class Indexer:
 		self._client.close()
 
 if __name__ == "__main__":
+	if len(sys.argv) != 3:
+		print('indexer.py locale index_path')
+		sys.exit(-1)
 	ind = Indexer(sys.argv[1])
 	index_path = sys.argv[2]
 	#output_path = sys.argv[2]

@@ -95,6 +95,9 @@ class Importer:
 
 if __name__ == "__main__":
 	imp = Importer()
+	if len(sys.argv) != 3:
+		print('importer.py dataset_dir index_path')
+		sys.exit(-1)
 	dataset_dir = sys.argv[1]
 	index_path = sys.argv[2]
 	imp.hashify(dataset_dir, index_path, dryrun=False)
