@@ -20,6 +20,7 @@ class Importer:
 			self._client = ipfshttpclient.connect(session=True)
 		except:
 			print('Could not connect to IPFS node')
+			sys.exit(-1)
 
 
 	def line_count(self, input_path):
