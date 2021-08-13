@@ -8,9 +8,12 @@ import progressbar
 import re
 import sys
 
+import languages 
+import orthography
+
 class Publisher:
 	
-	def __init__(self, lang, cid, nid):
+	def __init__(self, locale, display, cid, nid):
 		"""Set up a connection to the local IPFS node"""
 		try:
 			self._client = ipfshttpclient.connect(session=True)
@@ -18,6 +21,7 @@ class Publisher:
 			print('Could not connect to IPFS node')
 
 		self.languages = {}
+		self.display = display
 
 		self.key = self._client.name.resolve()
 		print(self.key)
@@ -32,19 +36,29 @@ class Publisher:
 
 		print('[languages]', self.languages)
 
-		self.lang = lang
+		self.locale = locale
 		self.cid = cid
 		
 
 	def publish(self):
 		opts = {}
 
-		self.languages[self.lang] = [self.cid]
+		meta_info = orthography.alternatives(self.locale)
+		meta_hash = self._client.add_json(meta_info, opts=opts)
+
+		self.languages[self.locale] = {
+			'display': self.display, 
+			'meta': meta_hash, 
+			'cids': [self.cid]
+		}
 
 		index_hash = self._client.add_json(self.languages, opts=opts)
 		
 		print(self.languages)
-		print(index_hash)
+		print('[locale]', self.locale)
+		print('[display]', self.display)
+		print('[index]', index_hash)
+		print('[meta]', meta_hash)
 
 		self._client.name.publish(index_hash, allow_offline=True)
 
@@ -65,12 +79,18 @@ if __name__ == "__main__":
 		print('Incorrect number of arguments')
 		sys.exit(-1)
 
-	lang = sys.argv[1]
+	locale = sys.argv[1]
 	cid = sys.argv[2]
 	nid = ''
 	if len(sys.argv) == 4:
 		nid = sys.argv[3]	
 
-	pub = Publisher(lang, cid, nid)
+	display = locale
+	if locale in languages.names:
+		display = languages.names[locale]
+	else:
+		print('WARNING:', locale, 'not found in languages.py, display name will be "' + locale + '".')
+
+	pub = Publisher(locale, display, cid, nid)
 	
 	pub.publish()
