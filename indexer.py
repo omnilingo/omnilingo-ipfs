@@ -33,6 +33,7 @@ class Indexer:
 		""" """
 		# [47, 120, 264, 156, 173, 162, 129, 81, 69, 63]
 		# TODO: Rework this, it's pretty terrible
+		# keys are clip lengths, values are buckets in [1..10]
 		m = {0:1, 1:1, 2:1, 3:1, 4:1, 5:2, 6:2, 7:3, 8:3, 9:4, 10:5, 11:6, 12:7, 13:8, 14:9, 15:10}
 		if b in m:
 			return m[b]
