@@ -47,8 +47,8 @@ class Publisher:
 		meta_hash = self._client.add_json(meta_info, opts=opts)
 
 		self.languages[self.locale] = {
-			'display': self.display, 
-			'meta': meta_hash, 
+#			'display': self.display, 
+#			'meta': meta_hash, 
 			'cids': [self.cid]
 		}
 
@@ -56,9 +56,9 @@ class Publisher:
 		
 		print(self.languages)
 		print('[locale]', self.locale)
-		print('[display]', self.display)
+#		print('[display]', self.display)
 		print('[index]', index_hash)
-		print('[meta]', meta_hash)
+#		print('[meta]', meta_hash)
 
 		self._client.name.publish(index_hash, allow_offline=True)
 
@@ -88,8 +88,8 @@ if __name__ == "__main__":
 	display = locale
 	if locale in languages.names:
 		display = languages.names[locale]
-	else:
-		print('WARNING:', locale, 'not found in languages.py, display name will be "' + locale + '".')
+#	else:
+#		print('WARNING:', locale, 'not found in languages.py, display name will be "' + locale + '".')
 
 	pub = Publisher(locale, display, cid, nid)
 	
