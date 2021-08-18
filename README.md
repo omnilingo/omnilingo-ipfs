@@ -23,3 +23,8 @@ Publish data to the global index in OmniLingo on IPFS:
 ```bash
 $ publisher.py locale cid
 ```
+
+On a given node, pin the files 
+```bash
+$ ...
+```
