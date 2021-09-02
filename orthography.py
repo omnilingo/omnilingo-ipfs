@@ -7,6 +7,12 @@ def _bre():
 	return accept
 
 
+def _grn():
+	accept = {
+		"ʼ": ["'", "’"],  # 02BC → [0027, 2019]
+	}
+	return accept
+
 def _quc():
 	accept = {
 		"ʼ": ["'", "’"],  # 02BC → [0027, 2019]
@@ -32,6 +38,8 @@ def alternatives(lang):
 		return _bre()
 	if lang in ["quc"]:
 		return _quc()
+	if lang in ["gn", "grn", "gug"]:
+		return _grn()
 	if lang in ["tr", "tur"]:
 		return _tur()
 
