@@ -24,7 +24,8 @@ Publish data to the global index in OmniLingo on IPFS:
 $ publisher.py locale cid
 ```
 
-On a given node, pin the files 
+Publish to a name:
+
 ```bash
-$ ...
+ipfs name publish cid 
 ```

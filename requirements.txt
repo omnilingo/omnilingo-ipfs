@@ -1,3 +1,4 @@
+progressbar2
 commonvoice-utils
 ipfshttpclient
 mutagen
