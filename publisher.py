@@ -56,8 +56,7 @@ class Publisher:
 
 		index_hash = self._client.add_json(self.languages, opts=opts)
 		
-		print(self.languages, file=sys.stderr)
-		print('[' + self.locale + ']' +  self.display, '|', meta_hash, file=sys.stderr)
+		print('[' + self.locale + ']',  self.display, '|', meta_hash, file=sys.stderr)
 
 		self._client.name.publish(index_hash, allow_offline=True)
 
