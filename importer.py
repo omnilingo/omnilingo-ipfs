@@ -19,7 +19,7 @@ class Importer:
 		try:
 			self._client = ipfshttpclient.connect(session=True)
 		except:
-			print('Could not connect to IPFS node')
+			print('Could not connect to IPFS node', file=sys.stderr)
 			sys.exit(-1)
 
 
@@ -51,8 +51,7 @@ class Importer:
 
 		clip_index = {}
 
-		print(input_path)
-		print(output_path)
+		print(input_path, '→', output_path, file=sys.stderr)
 
 		validated_path = self.path_join(input_path, 'validated.tsv')
 		clips_path = self.path_join(input_path, 'clips')

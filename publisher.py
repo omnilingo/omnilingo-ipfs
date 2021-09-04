@@ -18,7 +18,7 @@ class Publisher:
 		try:
 			self._client = ipfshttpclient.connect(session=True)
 		except:
-			print('Could not connect to IPFS node')
+			print('Could not connect to IPFS node', file=sys.stderr)
 
 		self.languages = {}
 		self.display = display
@@ -28,13 +28,13 @@ class Publisher:
 		try:
 			x = self._client.cat(self.key['Path'])
 			# Populate language list from existing
-			print('Found existing list')
+			print('Found existing list', file=sys.stderr)
 			self.languages = json.loads(x)
 		except:
 			print('No existing list')
 			pass
 
-		print('[languages]', self.languages)
+		print('[languages]', self.languages.keys(), file=sys.stderr)
 
 		self.locale = locale
 		self.cid = cid
@@ -56,13 +56,12 @@ class Publisher:
 
 		index_hash = self._client.add_json(self.languages, opts=opts)
 		
-		print(self.languages)
-		print('[locale]', self.locale)
-		print('[display]', self.display)
-		print('[index]', index_hash)
-		print('[meta]', meta_hash)
+		print(self.languages, file=sys.stderr)
+		print('[' + self.locale + ']' +  self.display, '|', meta_hash, file=sys.stderr)
 
 		self._client.name.publish(index_hash, allow_offline=True)
+
+		return index_hash 
 
 	def close(self):
 		"""Close the TCP connection to IPFS"""
@@ -91,8 +90,10 @@ if __name__ == "__main__":
 	if locale in languages.names:
 		display = languages.names[locale]
 	else:
-		print('WARNING:', locale, 'not found in languages.py, display name will be "' + locale + '".')
+		print('WARNING:', locale, 'not found in languages.py, display name will be "' + locale + '".', file=sys.stderr)
 
 	pub = Publisher(locale, display, cid, nid)
 	
-	pub.publish()
+	new_hash = pub.publish()
+
+	print('index:', new_hash)

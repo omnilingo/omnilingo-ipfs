@@ -25,7 +25,7 @@ class Indexer:
 		try:
 			self._client = ipfshttpclient.connect(session=True)
 		except:
-			print('Could not connect to IPFS node')
+			print('Could not connect to IPFS node', file=sys.stderr)
 
 		self.locale = locale
 
