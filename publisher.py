@@ -34,6 +34,7 @@ class Publisher:
 			print('No existing list')
 			pass
 
+#		self.languages = {}
 		print('[languages]', self.languages.keys(), file=sys.stderr)
 
 		self.locale = locale
@@ -76,7 +77,9 @@ if __name__ == "__main__":
 	### -> Retrieves existing 
 
 	if len(sys.argv) < 3 or len(sys.argv) > 4:
-		print('Incorrect number of arguments')
+		print('Incorrect number of arguments', file=sys.stderr)
+		print('',file=sys.stderr)
+		print('publisher.py locale cid nid', file=sys.stderr)
 		sys.exit(-1)
 
 	locale = sys.argv[1]
@@ -96,3 +99,5 @@ if __name__ == "__main__":
 	new_hash = pub.publish()
 
 	print('index:', new_hash)
+
+
