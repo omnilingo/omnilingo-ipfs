@@ -6,11 +6,23 @@
 
 ## Steps 
 
+### Import
+
 Import data into your local IPFS node and generate an index:
 
 ```bash
 $ importer.py dataset_dir index_path
 ```
+
+e.g. 
+
+```bash
+$ importer.py ./cv-corpus-7.0-2021-07-21/tr/ tr.json
+```
+
+where the `dataset_dir` is in [Common Voice format](doc/FORMAT.md).
+
+### Index
 
 Index the data, extracting a balanced subset of clips by a complexity metric:
 
@@ -18,14 +30,36 @@ Index the data, extracting a balanced subset of clips by a complexity metric:
 $ index.py locale index_path
 ```
 
+e.g. 
+
+```bash
+$ index.py tr tr.json
+```
+
+This will return a CID that looks like `QmXpgcavH2shpBbfnFoymPxEw2zpr4MdAgi1aaoZT4Yeho`
+
+### Publish
+
 Publish data to the global index in OmniLingo on IPFS:
 
 ```bash
 $ publisher.py locale cid
 ```
 
-Publish to a name:
+e.g. 
+
+```bash
+$ publisher.py tr QmXpgcavH2shpBbfnFoymPxEw2zpr4MdAgi1aaoZT4Yeho
+```
+
+Publish to a name using the local node ID:
 
 ```bash
 ipfs name publish cid 
+```
+
+e.g. 
+
+```bash
+ipfs name publish QmXpgcavH2shpBbfnFoymPxEw2zpr4MdAgi1aaoZT4Yeho
 ```
