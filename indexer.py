@@ -53,6 +53,7 @@ class Indexer:
 		buckets = {i: [] for i in range(1, 11)}
 		seen = {}
 		bar = progressbar.ProgressBar(max_value=MAX_PER_BUCKET*10).start()
+		MAX_CLIPS = MAX_PER_BUCKET*10
 		for sent_cid in clip_index:
 			sent_res = json.loads(self._client.cat(sent_cid))
 			if sent_res["content"] in TRANSCRIPT_BLACKLIST:
@@ -81,7 +82,8 @@ class Indexer:
 				bucket = self.rebucket(int((num_chars // audio.info.length)))
 				
 				if len(buckets[bucket]) >= MAX_PER_BUCKET:
-					continue
+					break
+					#continue
 
 #				print(bucket, audio.info.length, chars_sec, sent_res)
 
@@ -95,6 +97,9 @@ class Indexer:
 				buckets[bucket].append(entry)
 				total += 1
 				bar.update(total)
+
+			if total >= MAX_CLIPS:
+				break
 
 		print()
 		index_list = []
