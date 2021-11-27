@@ -15,7 +15,7 @@ $ importer.py dataset_dir index_path
 Index the data, extracting a balanced subset of clips by a complexity metric:
 
 ```bash
-$ index.py locale index_path
+$ indexer.py locale index_path
 ```
 
 Publish data to the global index in OmniLingo on IPFS:
