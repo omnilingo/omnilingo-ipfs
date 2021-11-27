@@ -33,7 +33,7 @@ $ indexer.py locale index_path
 e.g. 
 
 ```bash
-$ index.py tr tr.json
+$ indexer.py tr tr.json
 ```
 
 This will return a CID that looks like `QmXpgcavH2shpBbfnFoymPxEw2zpr4MdAgi1aaoZT4Yeho`
