@@ -6,6 +6,10 @@
 
 ## Steps 
 
+There are three main steps in adding your data to OmniLingo. The first
+step is importing the data into IPFS, the second is indexing the data and
+the final step is publishing the data.
+
 ### Import
 
 Import data into your local IPFS node and generate an index:

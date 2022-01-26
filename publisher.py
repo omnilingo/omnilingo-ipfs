@@ -13,7 +13,7 @@ import orthography
 
 class Publisher:
 	
-	def __init__(self, locale, display, cid, nid):
+	def __init__(self, locale, display, cid, reinitialise=False):
 		"""Set up a connection to the local IPFS node"""
 		try:
 			self._client = ipfshttpclient.connect(session=True)
@@ -24,15 +24,15 @@ class Publisher:
 		self.display = display
 
 		self.key = self._client.name.resolve()
-		print(self.key)
-		try:
-			x = self._client.cat(self.key['Path'])
-			# Populate language list from existing
-			print('Found existing list', file=sys.stderr)
-			self.languages = json.loads(x)
-		except:
-			print('No existing list')
-			pass
+		if not reinitialise:
+			try:
+				x = self._client.cat(self.key['Path'])
+				# Populate language list from existing
+				print('Found existing list', file=sys.stderr)
+				self.languages = json.loads(x)
+			except:
+				print('No existing list')
+				pass
 
 #		self.languages = {}
 		print('[languages]', self.languages.keys(), file=sys.stderr)
@@ -72,21 +72,24 @@ if __name__ == "__main__":
 
 	# Takes either:
 	## Single CID of index
-	### -> Generates a new key and adds the language
-	## CID of index + NID of existing language list
-	### -> Retrieves existing 
+	### -> Generates a new key and adds the languages
 
 	if len(sys.argv) < 3 or len(sys.argv) > 4:
 		print('Incorrect number of arguments', file=sys.stderr)
 		print('',file=sys.stderr)
-		print('publisher.py locale cid nid', file=sys.stderr)
+		print('publisher.py [-r] locale cid', file=sys.stderr)
 		sys.exit(-1)
 
-	locale = sys.argv[1]
-	cid = sys.argv[2]
-	nid = ''
-	if len(sys.argv) == 4:
-		nid = sys.argv[3]	
+	locale = ''
+	cid = ''
+	reinit = False
+	if sys.argv[1] == '-r':
+		reinit = True
+		locale = sys.argv[2]
+		cid = sys.argv[3]
+	else:
+		locale = sys.argv[1]
+		cid = sys.argv[2]
 
 	display = locale
 	if locale in languages.names:
@@ -94,7 +97,7 @@ if __name__ == "__main__":
 	else:
 		print('WARNING:', locale, 'not found in languages.py, display name will be "' + locale + '".', file=sys.stderr)
 
-	pub = Publisher(locale, display, cid, nid)
+	pub = Publisher(locale, display, cid, reinitialise=reinit)
 	
 	new_hash = pub.publish()
 
