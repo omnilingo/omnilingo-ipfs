@@ -75,6 +75,7 @@ names = {
     "ms": "Bahasa Melayu",
     "mr": "मराठी",
     "mt": "Malti",
+    "mdf": "Мокшень кяль",
     "myv": "Эрзякс",
     "my": "ဗမာ",
     "nb-NO": "Norsk (bokmål)",
