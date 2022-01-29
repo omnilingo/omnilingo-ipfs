@@ -101,7 +101,7 @@ class Indexer:
 			if total >= MAX_CLIPS:
 				break
 
-		print()
+		print('',file=sys.stderr)
 		index_list = []
 		for bucket in buckets:
 			index_list += buckets[bucket]
@@ -123,11 +123,11 @@ class Indexer:
 
 if __name__ == "__main__":
 	if len(sys.argv) != 3:
-		print('indexer.py locale index_path')
+		print('indexer.py locale index_path', file=sys.stderr)
 		sys.exit(-1)
 	ind = Indexer(sys.argv[1])
 	index_path = sys.argv[2]
 	#output_path = sys.argv[2]
 	index = ind.index(index_path)
-	print("Index: {index}".format(index = index))
+	print("{index}".format(index = index))
 	ind.close()
