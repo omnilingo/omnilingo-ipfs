@@ -74,7 +74,7 @@ if __name__ == "__main__":
 	## Single CID of index
 	### -> Generates a new key and adds the languages
 
-	if len(sys.argv) < 3 or len(sys.argv) > 4:
+	def usage():
 		print('Incorrect number of arguments', file=sys.stderr)
 		print('',file=sys.stderr)
 		print('publisher.py [-r] locale cid', file=sys.stderr)
@@ -84,10 +84,14 @@ if __name__ == "__main__":
 	cid = ''
 	reinit = False
 	if sys.argv[1] == '-r':
+		if len(sys.argv) != 4:
+			usage()
 		reinit = True
 		locale = sys.argv[2]
 		cid = sys.argv[3]
 	else:
+		if len(sys.argv) != 3:
+			usage()
 		locale = sys.argv[1]
 		cid = sys.argv[2]
 
