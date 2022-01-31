@@ -13,7 +13,7 @@ import orthography
 
 class Publisher:
 	
-	def __init__(self, locale, display, cid, reinitialise=False):
+	def __init__(self, locale, display, cid, merge=None):
 		"""Set up a connection to the local IPFS node"""
 		try:
 			self._client = ipfshttpclient.connect(session=True)
@@ -23,10 +23,17 @@ class Publisher:
 		self.languages = {}
 		self.display = display
 
-		self.key = self._client.name.resolve()
-		if not reinitialise:
+		if merge:
 			try:
-				x = self._client.cat(self.key['Path'])
+				try:
+					k5 = next(k for k in self._client.key.list()['Keys'] if k['Name'] == merge)
+					print("Resolved %s to %s" % (k5['Name'], k5['Id']), file=sys.stderr)
+					merge = k5['Id']
+				except StopIteration:
+					pass
+				if merge.startswith("k5"):
+					merge = self._client.name.resolve(merge)['Path']
+				x = self._client.cat(merge)
 				# Populate language list from existing
 				print('Found existing list', file=sys.stderr)
 				self.languages = json.loads(x)
@@ -77,18 +84,22 @@ if __name__ == "__main__":
 	def usage():
 		print('Incorrect number of arguments', file=sys.stderr)
 		print('',file=sys.stderr)
-		print('publisher.py [-r] locale cid', file=sys.stderr)
+		print('publisher.py [--merge cid] locale cid', file=sys.stderr)
 		sys.exit(-1)
 
 	locale = ''
 	cid = ''
-	reinit = False
+	merge = None
 	if sys.argv[1] == '-r':
-		if len(sys.argv) != 4:
+		print('Warning: -r is deprecated, and is now the default.', file=sys.stderr)
+		sys.argv.pop(1)
+
+	if sys.argv[1] == '--merge':
+		if len(sys.argv) != 5:
 			usage()
-		reinit = True
-		locale = sys.argv[2]
-		cid = sys.argv[3]
+		merge = sys.argv[2]
+		locale = sys.argv[3]
+		cid = sys.argv[4]
 	else:
 		if len(sys.argv) != 3:
 			usage()
@@ -101,7 +112,7 @@ if __name__ == "__main__":
 	else:
 		print('WARNING:', locale, 'not found in languages.py, display name will be "' + locale + '".', file=sys.stderr)
 
-	pub = Publisher(locale, display, cid, reinitialise=reinit)
+	pub = Publisher(locale, display, cid, merge=merge)
 	
 	new_hash = pub.publish()
 
