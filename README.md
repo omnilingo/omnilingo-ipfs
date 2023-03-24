@@ -67,3 +67,17 @@ e.g.
 ```bash
 ipfs name publish QmXpgcavH2shpBbfnFoymPxEw2zpr4MdAgi1aaoZT4Yeho
 ```
+
+# Publishing models
+
+To publish model files (e.g. for the pronunciation assistance) you need a directory, containing two files:
+
+* `models/LOCALE.tflite`: The binary for the ASR model
+* `models/LOCALE.json`: Metadata for the model
+
+The metadata file, e.g. `pt.json` for Portuguese, should look like:
+
+```json
+{"format": "coqui", "type": "asr", "licence":"AGPL-3.0", "src":"https://itml.cl.indiana.edu/models/"}
+```
+
