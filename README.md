@@ -78,6 +78,11 @@ To publish model files (e.g. for the pronunciation assistance) you need a direct
 The metadata file, e.g. `pt.json` for Portuguese, should look like:
 
 ```json
-{"format": "coqui", "type": "asr", "licence":"AGPL-3.0", "src":"https://itml.cl.indiana.edu/models/"}
+{"format": "coqui", "type": "acoustic", "licence":"AGPL-3.0", "src":"https://itml.cl.indiana.edu/models/"}
 ```
+ 
+You can publish using:
 
+```bash
+python3 publisher.py --merge QmXMp1Dv1Sf7ZHXcH6puqbudBhDNkqngopadzcy8Qikuqt --with-model models/pt.tflite pt QmbWXcHWVdRFh3ZmXEbf4tXTk6nqp8zkaNa4aAxaeQ9VTQ
+```

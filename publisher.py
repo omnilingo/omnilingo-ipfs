@@ -8,6 +8,7 @@ import progressbar
 import re
 import sys
 import glob
+import argparse
 
 import languages 
 import orthography
@@ -23,7 +24,7 @@ class Publisher:
 
 		self.languages = {}
 		self.display = display
-		self.models = []
+		self.models = models
 
 		if merge:
 			try:
@@ -51,9 +52,9 @@ class Publisher:
 		
 	def publish(self):
 		opts = {}
-
-		model_hash = self._client.add(open(self.models[0][0], 'rb').read(), opts=opts)
-		self.models[0][1]["model"] = model_hash
+		model_hash = self._client.add(self.models[0][0], opts=opts)
+		self.models[0][1]["model"] = model_hash["Hash"]
+		print(self.models[0][1])
 		model_meta_hash = self._client.add_json(self.models[0][1], opts=opts)
 
 		meta_info = {
@@ -91,36 +92,26 @@ if __name__ == "__main__":
 		print('Incorrect number of arguments', file=sys.stderr)
 		print('',file=sys.stderr)
 		print('publisher.py [--merge cid] locale cid', file=sys.stderr)
+		print('             [--with-model model.tflite] locale cid', file=sys.stderr)
 		sys.exit(-1)
 
+	merge = None
 	locale = ''
 	cid = ''
-	merge = None
 	models = []
-	if sys.argv[1] == '-r':
-		print('Warning: -r is deprecated, and is now the default.', file=sys.stderr)
-		sys.argv.pop(1)
 
-	# This is not the best way to do this.
-	if sys.argv[1] == '--model':
-		if len(sys.argv) != 3:
-			usage()
-		model_fn = sys.argv[2]
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-g', '--merge', dest='merge', action='store')
+	parser.add_argument('-m', '--with-model', dest='model', action='store')
+	parser.add_argument('locale')
+	parser.add_argument('cid')
+	args = parser.parse_args()
+
+	if args.model:
+		model_fn = args.model
 		model_meta_fn = model_fn.replace('.tflite', '.json')
 		model_meta = json.loads(open(model_meta_fn).read())	
-		model.append((model_fn, model_meta))
-
-	if sys.argv[1] == '--merge':
-		if len(sys.argv) != 5:
-			usage()
-		merge = sys.argv[2]
-		locale = sys.argv[3]
-		cid = sys.argv[4]
-	else:
-		if len(sys.argv) != 3:
-			usage()
-		locale = sys.argv[1]
-		cid = sys.argv[2]
+		models.append((model_fn, model_meta))
 
 	display = locale
 	if locale in languages.names:
@@ -128,7 +119,7 @@ if __name__ == "__main__":
 	else:
 		print('WARNING:', locale, 'not found in languages.py, display name will be "' + locale + '".', file=sys.stderr)
 
-	pub = Publisher(locale, display, models, cid, merge=merge)
+	pub = Publisher(args.locale, display, models, args.cid, merge=args.merge)
 	
 	new_hash = pub.publish()
 
