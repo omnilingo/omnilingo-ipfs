@@ -7,13 +7,14 @@ import json
 import progressbar
 import re
 import sys
+import glob
 
 import languages 
 import orthography
 
 class Publisher:
 	
-	def __init__(self, locale, display, cid, merge=None):
+	def __init__(self, locale, display, models, cid, merge=None):
 		"""Set up a connection to the local IPFS node"""
 		try:
 			self._client = ipfshttpclient.connect(session=True)
@@ -22,6 +23,7 @@ class Publisher:
 
 		self.languages = {}
 		self.display = display
+		self.models = []
 
 		if merge:
 			try:
@@ -47,13 +49,17 @@ class Publisher:
 		self.locale = locale
 		self.cid = cid
 		
-
 	def publish(self):
 		opts = {}
 
+		model_hash = self._client.add(open(self.models[0][0], 'rb').read(), opts=opts)
+		self.models[0][1]["model"] = model_hash
+		model_meta_hash = self._client.add_json(self.models[0][1], opts=opts)
+
 		meta_info = {
 			'alternatives': orthography.alternatives(self.locale),
-			'display': self.display
+			'display': self.display,
+			'models': [model_meta_hash]
 		}
 		meta_hash = self._client.add_json(meta_info, opts=opts)
 
@@ -90,9 +96,19 @@ if __name__ == "__main__":
 	locale = ''
 	cid = ''
 	merge = None
+	models = []
 	if sys.argv[1] == '-r':
 		print('Warning: -r is deprecated, and is now the default.', file=sys.stderr)
 		sys.argv.pop(1)
+
+	# This is not the best way to do this.
+	if sys.argv[1] == '--model':
+		if len(sys.argv) != 3:
+			usage()
+		model_fn = sys.argv[2]
+		model_meta_fn = model_fn.replace('.tflite', '.json')
+		model_meta = json.loads(open(model_meta_fn).read())	
+		model.append((model_fn, model_meta))
 
 	if sys.argv[1] == '--merge':
 		if len(sys.argv) != 5:
@@ -112,7 +128,7 @@ if __name__ == "__main__":
 	else:
 		print('WARNING:', locale, 'not found in languages.py, display name will be "' + locale + '".', file=sys.stderr)
 
-	pub = Publisher(locale, display, cid, merge=merge)
+	pub = Publisher(locale, display, models, cid, merge=merge)
 	
 	new_hash = pub.publish()
 
