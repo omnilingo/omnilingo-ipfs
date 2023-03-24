@@ -113,11 +113,11 @@ if __name__ == "__main__":
 		model_meta = json.loads(open(model_meta_fn).read())	
 		models.append((model_fn, model_meta))
 
-	display = locale
-	if locale in languages.names:
-		display = languages.names[locale]
+	display = args.locale
+	if args.locale in languages.names:
+		display = languages.names[args.locale]
 	else:
-		print('WARNING:', locale, 'not found in languages.py, display name will be "' + locale + '".', file=sys.stderr)
+		print('WARNING:', args.locale, 'not found in languages.py, display name will be "' + ags.locale + '".', file=sys.stderr)
 
 	pub = Publisher(args.locale, display, models, args.cid, merge=args.merge)
 	
