@@ -73,6 +73,9 @@ class Indexer:
 				'tokens': tokens,
 				'tags': tags
 			}
+			# Add perplexity here
+			# Add character frequencies
+			
 			meta_cid = self._client.add_json(meta)
 
 			for clip_cid in clip_index[sent_cid]:

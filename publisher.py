@@ -52,16 +52,17 @@ class Publisher:
 		
 	def publish(self):
 		opts = {}
-		model_hash = self._client.add(self.models[0][0], opts=opts)
-		self.models[0][1]["model"] = model_hash["Hash"]
-		print(self.models[0][1])
-		model_meta_hash = self._client.add_json(self.models[0][1], opts=opts)
-
 		meta_info = {
 			'alternatives': orthography.alternatives(self.locale),
 			'display': self.display,
-			'models': [model_meta_hash]
 		}
+		if self.models:
+			model_hash = self._client.add(self.models[0][0], opts=opts)
+			self.models[0][1]["model"] = model_hash["Hash"]
+			print(self.models[0][1])
+			model_meta_hash = self._client.add_json(self.models[0][1], opts=opts)
+			meta_info['models'] = [model_meta_hash]
+
 		meta_hash = self._client.add_json(meta_info, opts=opts)
 
 		self.languages[self.locale] = {
@@ -92,7 +93,7 @@ if __name__ == "__main__":
 		print('Incorrect number of arguments', file=sys.stderr)
 		print('',file=sys.stderr)
 		print('publisher.py [--merge cid] locale cid', file=sys.stderr)
-		print('             [--with-model model.tflite] locale cid', file=sys.stderr)
+		print('	  [--with-model model.tflite] locale cid', file=sys.stderr)
 		sys.exit(-1)
 
 	merge = None
@@ -110,7 +111,7 @@ if __name__ == "__main__":
 	if args.model:
 		model_fn = args.model
 		model_meta_fn = model_fn.replace('.tflite', '.json')
-		model_meta = json.loads(open(model_meta_fn).read())	
+		model_meta = json.loads(open(model_meta_fn).read())
 		models.append((model_fn, model_meta))
 
 	display = args.locale
@@ -124,5 +125,3 @@ if __name__ == "__main__":
 	new_hash = pub.publish()
 
 	print('index:', new_hash)
-
-
