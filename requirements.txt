@@ -2,3 +2,5 @@ progressbar2
 commonvoice-utils
 ipfshttpclient==0.8.0a2
 mutagen
+psutil
+datetime
