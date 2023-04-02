@@ -16,18 +16,20 @@ from mutagen.easyid3 import EasyID3
 # MULTIPROCESSING
 from io import TextIOWrapper
 from typing import (Any, Iterable)
-from datetime import datetime
+from datetime import datetime, timedelta
 import threading
 from concurrent.futures import Future, ThreadPoolExecutor
 import psutil
 
 # How many threads will we use?
-PROC_COUNT: int = psutil.cpu_count(logical=False) - 1			# Lower usage
-# PROC_COUNT: int = psutil.cpu_count(logical=True)        # High performance? (to be tested)
+# PROC_COUNT: int = psutil.cpu_count(logical=False) - 1			# Lower usage
+PROC_COUNT: int = psutil.cpu_count(logical=True)        # High performance? (to be tested)
 
 # To not hog the RAM, we will limit the data loaded
 MAX_CHUNK_SIZE: int = 100
 
+
+# Multiple Progress Bar Wrapper
 output_lock = threading.Lock()
 
 class BarStreamWrapper:
@@ -53,7 +55,7 @@ class Importer:
 	_clips_path: str = ""
 	_output_path: str = ""
 	_opts: object = {}
-	# _bars: list[progressbar.ProgressBar] = []
+	# _bars: Iterable[progressbar.ProgressBar] = []
 	_bars: list = []
 
 	def __init__(self):
@@ -64,7 +66,7 @@ class Importer:
 			print('Could not connect to IPFS node', file=sys.stderr)
 			sys.exit(-1)
 
-	def chunk_reader(self, dict_reader: csv.DictReader, chunk_size: int = 1000) -> Iterable[dict]:
+	def chunk_reader(self, dict_reader: csv.DictReader, chunk_size: int = 100) -> Iterable[dict]:
 		"""
 		Generator function to read from a csv.DictReader in chunks of lines (records)
 		:param dict_reader: csv.DictReader object
@@ -73,7 +75,8 @@ class Importer:
 		"""
 		chunk: list[dict] = []
 		for i, dict_object in enumerate(dict_reader):
-			if (i % chunk_size == 0 and i > 0):
+			if (i % (chunk_size-1) == 0 and i > 0):
+					chunk.append(dict_object)
 					yield chunk
 					chunk = []
 			chunk.append(dict_object)
@@ -132,7 +135,7 @@ class Importer:
 			audio.save()
 			clip_res = client.add(clip_path, opts=self._opts)
 			self._bars[th_no].update(i)
-			results.append([sent_hash, clip_res])
+			results.append([sent_hash, clip_res])   # return list (length=input) of list (length=2)
 		
 		client.close()
 		return results
@@ -164,33 +167,43 @@ class Importer:
 		num_chunks = int(file_length/chunk_size) + 1 if (file_length % chunk_size > 0) else 0
 
 		print(f'=== Importer processing {file_length} recs on {PROC_COUNT} threads.', input_path, '→', output_path, file=sys.stderr)
-		print(f'=== Chunk size: {chunk_size} records/process / Total chunks: {num_chunks}')
-
-		clip_index = {}
-		chunk: Iterable[dict] = []
+		print(f'=== Chunk size: {chunk_size} records/process - Total chunks: {num_chunks}')
 
 		# Handle Multi ProgressBars, first one is chunks, others show threds
-		self._bars.append(
-			progressbar.ProgressBar(fd=BarStreamWrapper(0), prefix='Chunks:   ', max_value=num_chunks, poll_interval=5, min_poll_interval=5)
-		)
+		update_interval: int = 2 if chunk_size < 100 else 5
+		samples_minutes: int = 1 if num_chunks < 10 else 2 if num_chunks < 100 else 5
+		self._bars.append(progressbar.ProgressBar(
+			fd=BarStreamWrapper(0),
+			prefix='Chunks:   ',
+			max_value=num_chunks,
+			poll_interval=update_interval,
+			min_poll_interval=update_interval,
+			widget_kwargs={'samples': timedelta(minutes=samples_minutes)}
+		))
 		for wcnt in range(PROC_COUNT):
-			self._bars.append(
-				progressbar.ProgressBar(fd=BarStreamWrapper(wcnt+1), prefix=f'Worker-{wcnt}: ', max_value=chunk_size, poll_interval=5, min_poll_interval=5)
-			)
+			self._bars.append(progressbar.ProgressBar(
+				fd=BarStreamWrapper(wcnt+1),
+				prefix=f'Worker-{wcnt}: ',
+				max_value=chunk_size,
+				poll_interval=update_interval,
+				min_poll_interval=update_interval
+			))
 			print('...')
 		print()
 		for bar in self._bars:
 			bar.start()
+
+		#
+		# Actual processing through threads
+		#
+		chunk: Iterable[dict] = []
 
 		with open(validated_path, newline='') as validated_file:
 			if dryrun: 
 				self._opts={'only_hash': True}
 
 			reader = csv.DictReader(validated_file, delimiter='\t')
-
 			future_list: list[Future] = []
-			result_list: list[object] = []
-
 			cnt_chunks: int = 0
 
 			with ThreadPoolExecutor(max_workers=PROC_COUNT, thread_name_prefix="Worker") as e:
@@ -211,28 +224,29 @@ class Importer:
 		for bar in self._bars:
 			bar.finish()
 
-		for i in range(len(future_list)):
-			# print(f'=== Results of process {i} - {len(futurelist[i].result())} records.')
-			result_list.extend(future_list[i].result())
-
-		for item in result_list:
-			if item[0] not in clip_index:
-				clip_index[item[0]] = []
-			clip_index[item[0]].append(item[1]['Hash'])
+		# combine
+		clip_index: dict = {}
+		cnt_results: int = 0
+		for future in future_list:
+			results = future.result()
+			cnt_results += len(results)
+			for item in results:
+				if item[0] not in clip_index:
+					clip_index[item[0]] = []
+				clip_index[item[0]].append(item[1]['Hash'])
 
 		# Save the transcript → clip hash as a json file
 		with open(output_path, 'w') as output_file:
 			json.dump(clip_index, output_file)
 
 		total_seconds = (datetime.now() - start_time).total_seconds()
-		print('\n' * 3)
-		print(f'=== Returned items: {len(result_list)} - Required: {file_length}')
+		print(f'\n=== Returned items: {cnt_results} - Required: {file_length}')
 		print(f'=== PROCESSED {file_length} records in {total_seconds} sec.')
 		print(f'=== SPEED ~{int(1000*total_seconds/file_length)} sec/1000 recs / ~{int(file_length/total_seconds)} recs/sec.')
 
-	# def close(self):
-	# 	"""Close the TCP connection to IPFS"""
-	# 	self._client.close()
+	def close(self):
+		"""Close the TCP connection to IPFS"""
+		self._client.close()
 
 if __name__ == "__main__":
 	imp = Importer()
@@ -242,3 +256,4 @@ if __name__ == "__main__":
 	dataset_dir = sys.argv[1]
 	index_path = sys.argv[2]
 	imp.hashify(dataset_dir, index_path, dryrun=False)
+	imp.close()
