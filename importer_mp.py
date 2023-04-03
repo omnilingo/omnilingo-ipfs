@@ -202,7 +202,7 @@ class Importer:
       if dryrun: 
         self.__opts={'only_hash': True}
 
-      reader = csv.DictReader(validated_file, delimiter='\t')
+      reader = csv.DictReader(validated_file, delimiter='\t', strict=True, quotechar=None, quoting=csv.QUOTE_NONE)
       future_list: list[Future] = []
       cnt_chunks: int = 0
 
